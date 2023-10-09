@@ -1,0 +1,28 @@
+version: '3.3'
+services:
+
+  db:
+    image: postgres:13.0-alpine
+    volumes:
+      - database:/var/lib/postgresql/data/
+    env_file:
+      - ./.env
+
+  web:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - db
+    env_file:
+      - ./.env
+    command:
+      sh -c "python manage.py migrate &&
+             python manage.py loaddata fixture.json &&
+             gunicorn api.wsgi:application -b 0:8000 --reload"
+    ports:
+      - 8000:8000
+
+volumes:
+  database:
